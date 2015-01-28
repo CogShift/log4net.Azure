@@ -1,4 +1,5 @@
 using System;
+using System.Configuration;
 using System.Linq;
 using log4net.Appender.Extensions;
 using log4net.Appender.Language;
@@ -68,7 +69,12 @@ namespace log4net.Appender
         {
             base.ActivateOptions();
 
-            _account = CloudStorageAccount.Parse(ConnectionString);
+			// Attempt to retrieve the connection string by name from the config file first.  If it doesn't exist, 
+			// assume the defined connection string is the actual connection string.
+			var connectionStringObj = ConfigurationManager.ConnectionStrings[ConnectionString];
+			var connectionString = connectionStringObj != null ? connectionStringObj.ConnectionString : ConnectionString;
+
+			_account = CloudStorageAccount.Parse(connectionString);
             _client = _account.CreateCloudTableClient();
             _table = _client.GetTableReference(TableName);
             _table.CreateIfNotExists();
